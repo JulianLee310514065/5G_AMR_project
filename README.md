@@ -220,14 +220,8 @@ graph LR
   - 視訊播放器
   - 教育影片播放
 
-#### 2. 前端技術棧
-- **框架**: jQuery, Bootstrap
-- **MQTT 通信**: WebSocket (mqttws31.js)
-- **視訊通話**: Jitsi Meet API
-- **UI 組件**: jQuery UI, Toast 通知
-- **響應式設計**: 全螢幕模組切換
 
-#### 3. 前端與後端通信
+#### 2. 前端與後端通信
 ```
 前端 (WebSocket) → MQTT Broker → Python/Java 後端
 ```

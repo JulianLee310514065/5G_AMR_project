@@ -42,14 +42,14 @@
    **音訊處理主題**：
    - `aux.ob` - 音訊原始資料 (AudioSensor → SpeechRecognizer)
    - `aux.is` - 音訊控制指令 (AudioSensor 訂閱)
-   - `aux.cmds` - 音訊命令 (AudioSensor 訂閱)
-   - `aux.vols` - 音量控制 (AudioSensor 訂閱)
-   - `aux.sils` - 靜音控制 (AudioSensor 訂閱)
+   - (?)`aux.cmds` - 音訊命令 (AudioSensor 訂閱)
+   - (?)`aux.vols` - 音量控制 (AudioSensor 訂閱)
+   - (?)`aux.sils` - 靜音控制 (AudioSensor 訂閱)
    
    **語音識別主題**：
    - `spc.is` - 語音識別結果 (Python → SpeechRecognizer)
-   - `spc.txls` - 語音文字限制設定 (SpeechRecognizer 訂閱)
-   - `wsp.ib` - 語音處理請求 (SpeechRecognizer → Whisper)
+   - (?)`spc.txls` - 語音文字限制設定 (SpeechRecognizer 訂閱)
+   - (?)`wsp.ib` - 語音處理請求 (SpeechRecognizer → Whisper)
    
    **對話處理主題**：
    - `gpt.ib` - 對話處理請求 (Java → Python 大腦)
@@ -58,7 +58,7 @@
    - `ast.os` - 助手狀態 (VirtualAssistant → TaskManager)
    
    **任務管理主題**：
-   - `tsm.is` - 任務管理指令 (TaskManager 訂閱)
+   - (?)`tsm.is` - 任務管理指令 (TaskManager 訂閱)
    - `confirm.is` - 確認模式控制 (多組件共用)
    - `sql_update.is` - 資料庫更新通知 (TaskManager 訂閱)
    
@@ -74,10 +74,10 @@
    - `tts.is` - TTS 系統指令 (Task → TTS)
    
    **系統同步主題**：
-   - `sync.request` - 系統同步請求 (Python 大腦訂閱)
+   - (?)`sync.request` - 系統同步請求 (Python 大腦訂閱)
    
    **資料流向**：
-   ```
+   ```mermaid
    音訊輸入 → aux.ob → 語音識別 → spc.is → 對話處理 → gpt.ib → 
    AI大腦 → ast.is → 虛擬助手 → ast.os → 任務管理 → 
    執行分發 → [rdr.is, spk.is, rbo.is] → 各執行器 → 狀態回饋
@@ -92,8 +92,6 @@
    | **TaskManager** | `ast.os`, `tsm.is`, `spk.os`, `rbo.os`, `rdr.os`, `confirm.is`, `sql_update.is`, `amr.act.os` | `spk.os`, `rdr.os`, `motion.is`, `rdr.is`, `amr.info.os` |
    | **VirtualAssistant** | `ast.is` | `ast.os` |
    | **Actuator** | `rbo.is`, `rdr.is`, `motion.os`, `amr.info.os` | `spk.os`, `rbo.os`, `rdr.os`, `motion.is` |
-   | **Robot** | - | `motion.os` |
-   | **Task20240419** | `robo.os` | `taskman.is`, `robo.is` |
    | **Task20240427** | `spk.os`, `rbo.os`, `rdr.os` | `tsm.is`, `rbo.is`, `rdr.is`, `spk.is`, `tts.is`, `confirm.is`, `rag.ib`, `ast.is` |
    | **proxy_llm2.py** | `gpt.ib`, `rag.ib`, `sync.request` | `ast.is`, `ast.os` |
    | **local_whisper.py** | `wsp.ib` | `spc.is` |
@@ -101,13 +99,7 @@
    | **前端介面** | `rdr.is` | `gpt.ib`, `rag.ib` |
    
    **額外主題說明**：
-   - `tts.is` - TTS 系統指令 (Task → TTS 系統)
-   - `taskman.is` - 任務管理器狀態 (Task → TaskManager)
-   - `robo.is` - 機器人指令 (Task → Robot，舊版本)
-   - `robo.os` - 機器人狀態回饋 (Robot → Task，舊版本)
-   - `amr.act.os` - AMR 動作狀態 (AMR → TaskManager，未完全啟用)
-   - `amr.info.os` - AMR 資訊回饋 (AMR → Actuator，未完全啟用)
-   - `main.is` - 主要輸入流 (備用語音識別通道，未啟用)
+   - `main.is` - 主要輸入流 (備用語音識別通道，**資通用**)
    
    **主題命名規則**：
    - `.is` = Input Stream (輸入流)
@@ -217,7 +209,7 @@ graph LR
 - **機器人化身模組** (`faceDiv`)：
   - 機器人動畫顯示 (`claim.gif`, `talk.gif`)
   - 狀態指示器 (`statusBox`)
-  - 任務列表顯示
+
 
 - **視訊通話模組**：
   - Jitsi 呼叫界面 (`jitsiCallDiv`)
@@ -246,38 +238,7 @@ graph LR
 3. 發送 `gpt.ib` 主題進行語音檢查
 4. 根據指令切換不同的界面模組
 
-### 詳細系統流程
 
-#### 1. 音訊輸入處理流程
-```
-音訊輸入 → AudioSensor (JAVA) → 權限檢查 (sudo) → Whisper (Python) → SpeechRecognizer (JAVA)
-```
-
-#### 2. 任務處理流程
-```
-SpeechRecognizer → TaskManager → MQTT (gpt.ib) → proxy_llm2 (Python大腦)
-```
-
-#### 3. AI 決策流程
-```
-proxy_llm2 → Claude LLM → 知識檢索分支：
-├── RAG (proxy_llm2 + RAGFlow) - 醫療知識查詢
-├── 房號 (proxy_llm2 + ChromaDB) - 病患資料查詢
-└── Hard Decision Point - 複雜決策判斷
-```
-
-#### 4. 執行回饋流程
-```
-AI決策結果 → MQTT主題分發：
-├── rag.ib → 網頁/視訊 (rdr.is)
-├── rag.ib → TTS確認 (spk.is)  
-└── rag.ib → AMR移動 (rbo.is)
-```
-
-#### 5. 監控與管理
-- **小幫手檢查**：Task ID 追蹤與狀態監控
-- **TaskManager**：任務排程與執行管理
-- **Avatar**：機器人化身與動作控制
 
 ## 技術棧
 
@@ -286,8 +247,6 @@ AI決策結果 → MQTT主題分發：
 - **構建工具**: Maven
 - **通信**: MQTT (Eclipse Paho)
 - **數據處理**: FastJSON
-- **日誌**: Log4j
-- **音訊處理**: AudioSensor
 - **機器人控制**: Avatar, AMR API
 
 ### Python 端
@@ -312,53 +271,9 @@ AI決策結果 → MQTT主題分發：
 - **響應式設計**: CSS3 全螢幕佈局
 - **多媒體支援**: HTML5 Video Player
 
-## 安裝指南
 
-### 環境要求
-- Java 8 或更高版本
-- Python 3.8 或更高版本
-- Apache Apollo MQTT Broker
 
-### 1. MQTT Broker 設置
-```bash
-# 啟動 Apollo MQTT Broker
-./start_apollo_mqtt.cmd
-```
-
-### 2. Java 控制系統設置
-```bash
-cd AMR_LLM
-# 使用 Maven 編譯
-mvn clean compile
-# 運行主程式
-mvn exec:java -Dexec.mainClass="org.itri.sstc.amr_llm.AMR_LLM"
-```
-
-### 3. Python 大腦系統設置
-```bash
-cd pythonWhisper
-# 安裝依賴
-pip install -r requirements.txt
-# 運行主程式
-python proxy_llm2.py
-```
-
-### 4. 前端介面設置
-```bash
-cd AMR_LLM/assets
-# 使用 Web 服務器運行前端
-# 方式 1：使用 Python 內建服務器
-python -m http.server 8080
-
-# 方式 2：使用 Node.js 的 live-server
-# npm install -g live-server
-# live-server --port=8080
-
-# 訪問前端界面
-# 瀏覽器打開：http://localhost:8080/index6.html
-```
-
-### 5. 配置文件設置
+### 配置文件設置
 
 #### Java 端配置 (`Defineds.java`)
 ```java
@@ -492,7 +407,7 @@ const options = {
     - 任務列表更新
     - 多媒體內容播放
 
-### 指令格式
+### LLM生成特定指令格式
 ```
 指令意圖::對應參數
 ```
@@ -500,8 +415,8 @@ const options = {
 範例：
 ```
 移動自身位置::101
-貼心問答聊天::您好，有什麼可以幫助您的嗎？
-詢問患者狀況::是否已服藥
+貼心問答聊天::您好，我受護理師指派來詢問您的吃藥情況？
+詢問患者狀況::是否已服藥?
 ```
 
 ## 資料結構
@@ -527,28 +442,6 @@ const options = {
 }
 ```
 
-## 維護指南
-
-### 日誌系統
-- Java 端：使用 Log4j，日誌存放在 `log/` 目錄
-- Python 端：使用 print 輸出，建議實作 logging 模組
-
-### 資料庫維護
-- ChromaDB：定期清理過期向量資料
-- SQLite：定期備份病患資料
-- RAGFlow：更新醫療知識庫
-
-### 系統監控
-- MQTT 連線狀態
-- API 調用次數與成功率
-- 系統回應時間
-- 記憶體使用情況
-- Task ID 追蹤狀態
-
-### 錯誤處理
-- 網路連線中斷：自動重連機制
-- API 調用失敗：降級處理
-- 資料查詢失敗：預設回應
 
 ## 常見問題
 
@@ -556,7 +449,7 @@ const options = {
 **解決方案**：
 1. 檢查 MQTT Broker 是否正常運行
 2. 確認網路連線
-3. 檢查認證資訊
+3. 確認port(61613)是否對外
 
 ### Q2: Python 大腦無回應
 **解決方案**：
@@ -570,36 +463,9 @@ const options = {
 2. 確認 CSV 資料格式正確
 3. 重新載入病患資料
 
-### Q4: 語音識別失敗
-**解決方案**：
-1. 檢查 Whisper 模型是否正常載入
-2. 確認音訊輸入設備正常
-3. 檢查權限設定
 
-## 開發團隊
 
-- **主辦單位**: 資通所 (Institute for Information Industry)
-- **協辦單位**: 服科中心 (Service Science Center)
-- **開發語言**: Java, Python
-- **版本控制**: Git
-- **文檔維護**: 需定期更新
-
-## 版本歷史
-
-- **v1.0** (2024): 基礎功能實現
-- **v1.1** (2024): 添加 RAGFlow 整合
-- **v1.2** (2024): 優化任務管理系統
-- **v1.3** (2024): 完善 MQTT 通信架構
 
 ## 授權資訊
 
 本專案屬於資通所與服科中心合作開發專案，請遵循相關授權規定。
-
----
-
-**注意事項**：
-- 系統涉及醫療資料，請確保資訊安全
-- 定期備份重要資料
-- 遵循醫療法規相關規定
-- 持續監控系統運行狀態
-- 確保 MQTT 主題訂閱狀態正常 

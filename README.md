@@ -37,7 +37,7 @@
 4. **通信系統 (MQTT架構)**
    - **MQTT Broker** (Apache Apollo、port = 61613、WebSocket = 61623)
    
-   **主題分類架構**：
+   [**主題分類架構**](https://github.com/JulianLee310514065/5G_AMR_project/blob/main/Mqtt_main_topic_detail.md)
    
    **音訊處理主題**：
    - `aux.ob` - 音訊原始資料 (AudioSensor → SpeechRecognizer)

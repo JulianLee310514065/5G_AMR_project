@@ -77,7 +77,7 @@
    - (?)`sync.request` - 系統同步請求 (Python 大腦訂閱)
    
    **資料流向**：
-   ```mermaid
+   ```
    音訊輸入 → aux.ob → 語音識別 → spc.is → 對話處理 → gpt.ib → 
    AI大腦 → ast.is → 虛擬助手 → ast.os → 任務管理 → 
    執行分發 → [rdr.is, spk.is, rbo.is] → 各執行器 → 狀態回饋
